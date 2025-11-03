@@ -1,0 +1,135 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: multiagent-kubecon-microservices
+metadata:
+  template: multiagent-kubecon-microservices@1.0.0
+  description: Multi-Agent AI System - Microservices Architecture (Phase 2)
+
+# SERVICES CONFIGURATION - MICROSERVICES
+services:
+  # Coordinator Service (A2A + MCP Client + Web UI)
+  coordinator:
+    project: ./src/services/coordinator
+    language: py
+    host: aks
+    docker:
+      path: ./Dockerfile.coordinator
+      context: .
+    k8s:
+      manifests:
+        - ./manifests/microservices/coordinator
+
+  # Currency Agent Service (MCP Server)
+  currency-agent:
+    project: ./src/services/currency_agent
+    language: py
+    host: aks
+    docker:
+      path: ./Dockerfile.currency
+      context: .
+    k8s:
+      manifests:
+        - ./manifests/microservices/currency-agent
+
+  # Activity Agent Service (MCP Server)
+  activity-agent:
+    project: ./src/services/activity_agent
+    language: py
+    host: aks
+    docker:
+      path: ./Dockerfile.activity
+      context: .
+    k8s:
+      manifests:
+        - ./manifests/microservices/activity-agent
+
+# INFRASTRUCTURE CONFIGURATION
+infra:
+  provider: bicep
+  path: infra
+  module: main.microservices  # Use microservices-specific bicep
+
+# RESOURCE GROUP NAMING
+resourceGroup: rg-${AZURE_ENV_NAME}
+
+# HOOKS
+hooks:
+  # Before provisioning - validate prerequisites
+  preprovision:
+    shell: sh
+    run: |
+      echo "🔍 Checking prerequisites for microservices deployment..."
+      if [ -z "$AZURE_OPENAI_API_KEY" ]; then
+        echo "⚠️  Warning: AZURE_OPENAI_API_KEY not set. Will use Managed Identity."
+      fi
+      echo "✅ Prerequisites check complete"
+    interactive: false
+    continueOnError: true
+
+  # After infrastructure but before services
+  postprovision:
+    shell: sh
+    run: |
+      echo "🔧 Configuring AKS cluster..."
+      
+      # Get AKS credentials
+      az aks get-credentials \
+        --resource-group ${AZURE_RESOURCE_GROUP} \
+        --name ${AZURE_AKS_CLUSTER_NAME} \
+        --overwrite-existing
+      
+      # Create namespace
+      kubectl create namespace multiagent-microservices --dry-run=client -o yaml | kubectl apply -f -
+      
+      # Create ConfigMap
+      kubectl create configmap app-config \
+        --from-literal=AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT} \
+        --from-literal=AZURE_OPENAI_DEPLOYMENT_NAME=${AZURE_OPENAI_DEPLOYMENT_NAME} \
+        --from-literal=CURRENCY_AGENT_URL=http://currency-agent:8001 \
+        --from-literal=ACTIVITY_AGENT_URL=http://activity-agent:8002 \
+        --namespace=multiagent-microservices \
+        --dry-run=client -o yaml | kubectl apply -f -
+      
+      # Create Secret (if API key is available)
+      if [ ! -z "$AZURE_OPENAI_API_KEY" ]; then
+        kubectl create secret generic openai-secret \
+          --from-literal=AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY} \
+          --namespace=multiagent-microservices \
+          --dry-run=client -o yaml | kubectl apply -f -
+      fi
+      
+      echo "✅ AKS configuration complete"
+    interactive: false
+    continueOnError: false
+
+  # After deployment
+  postdeploy:
+    shell: sh
+    run: |
+      echo ""
+      echo "🎉 Microservices deployment completed!"
+      echo ""
+      echo "📊 Deployment Summary:"
+      echo "  Environment: ${AZURE_ENV_NAME}"
+      echo "  Resource Group: ${AZURE_RESOURCE_GROUP}"
+      echo "  AKS Cluster: ${AZURE_AKS_CLUSTER_NAME}"
+      echo "  Namespace: multiagent-microservices"
+      echo ""
+      echo "🔍 Getting service status..."
+      kubectl get pods -n multiagent-microservices
+      echo ""
+      echo "🌐 Getting external IP..."
+      kubectl get svc coordinator-service -n multiagent-microservices
+      echo ""
+      echo "📖 Next Steps:"
+      echo "  1. Wait for external IP assignment (may take 2-3 minutes)"
+      echo "  2. Test A2A endpoint: curl http://<EXTERNAL-IP>/a2a/"
+      echo "  3. Test Web UI: http://<EXTERNAL-IP>"
+      echo "  4. View logs: kubectl logs -n multiagent-microservices -l app=coordinator -f"
+      echo ""
+      echo "📊 Compare with Phase 1:"
+      echo "  Phase 1 (Monolithic): kubectl get svc -n multiagent-kubecon-simple"
+      echo "  Phase 2 (Microservices): kubectl get svc -n multiagent-microservices"
+      echo ""
+    interactive: false
+    continueOnError: false
