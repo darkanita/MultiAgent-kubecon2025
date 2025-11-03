@@ -108,7 +108,6 @@ A cloud-native multi-agent application combining Semantic Kernel AI agents with 
 │  │  │  │  ┌────────────────────────────────────────────────────┐  │ │    │ │
 │  │  │  │  │  ConfigMap: app-config                             │  │ │    │ │
 │  │  │  │  │  - AZURE_OPENAI_ENDPOINT                           │  │ │    │ │
-│  │  │  │  │  - AZURE_COSMOS_ENDPOINT                           │  │ │    │ │
 │  │  │  │  └────────────────────────────────────────────────────┘  │ │    │ │
 │  │  │  │                                                           │ │    │ │
 │  │  │  │  ┌────────────────────────────────────────────────────┐  │ │    │ │
@@ -134,15 +133,6 @@ A cloud-native multi-agent application combining Semantic Kernel AI agents with 
 │  │  └─────────────────────────────────────────────────────────────────┘    │ │
 │  │                          ▲                                               │ │
 │  │                          │ AI Requests                                   │ │
-│  │                          │                                               │ │
-│  │  ┌─────────────────────────────────────────────────────────────────┐    │ │
-│  │  │  Azure Cosmos DB (Serverless)                                   │    │ │
-│  │  │  - Database: AgentDB                                            │    │ │
-│  │  │  - API: SQL                                                     │    │ │
-│  │  │  - Endpoint: cosmos-5h4hjd6wjnu74.documents.azure.com           │    │ │
-│  │  └─────────────────────────────────────────────────────────────────┘    │ │
-│  │                          ▲                                               │ │
-│  │                          │ Data Storage                                  │ │
 │  │                          │                                               │ │
 │  │  ┌─────────────────────────────────────────────────────────────────┐    │ │
 │  │  │  Virtual Network                                                │    │ │
@@ -255,10 +245,9 @@ Developer Workstation
 │       • AKS            │                                  │
 │       • ACR            │                                  │
 │       • OpenAI         │                                  ▼
-│       • Cosmos DB      │                    ┌───────────────────────────┐
-│       • VNet           │                    │  3. Kubernetes Deploy     │
-│       • Log Analytics  │                    │     - Apply manifests/    │
-└────────────────────────┘                    │     - Create namespace    │
+│       • VNet           │                    ┌───────────────────────────┐
+│       • Log Analytics  │                    │  3. Kubernetes Deploy     │
+└────────────────────────┘                    │     - Apply manifests/    │
                                               │     - Deploy pods         │
                                               │     - Create service      │
                                               │     - ConfigMap & Secrets │
