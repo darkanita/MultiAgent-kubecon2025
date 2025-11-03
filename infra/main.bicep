@@ -70,13 +70,6 @@ output AZURE_OPENAI_ENDPOINT string = coreInfra.outputs.openaiEndpoint
 @description('The name of the Azure OpenAI deployment')
 output AZURE_OPENAI_DEPLOYMENT_NAME string = 'gpt-4o-mini'
 
-// Data Services
-@description('The Cosmos DB endpoint')
-output AZURE_COSMOS_ENDPOINT string = coreInfra.outputs.cosmosEndpoint
-
-@description('The Cosmos DB database name')
-output AZURE_COSMOS_DATABASE_NAME string = 'AgentDB'
-
 // Monitoring
 @description('The Log Analytics workspace ID')
 output AZURE_LOG_ANALYTICS_WORKSPACE_ID string = coreInfra.outputs.logAnalyticsWorkspaceId

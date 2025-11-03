@@ -146,80 +146,6 @@ resource gptDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-04
 }
 
 // =================================================================================================
-// 7. COSMOS DB - SERVERLESS
-// =================================================================================================
-
-resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
-  name: 'cosmos-${resourceToken}'
-  location: location
-  tags: tags
-  kind: 'GlobalDocumentDB'
-  properties: {
-    databaseAccountOfferType: 'Standard'
-    consistencyPolicy: {
-      defaultConsistencyLevel: 'Session'
-    }
-    locations: [
-      {
-        locationName: location
-        failoverPriority: 0
-      }
-    ]
-    capabilities: [
-      {
-        name: 'EnableServerless'
-      }
-    ]
-  }
-}
-
-resource cosmosDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2023-11-15' = {
-  parent: cosmosAccount
-  name: 'AgentDB'
-  properties: {
-    resource: {
-      id: 'AgentDB'
-    }
-  }
-}
-
-resource conversationContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2023-11-15' = {
-  parent: cosmosDatabase
-  name: 'conversations'
-  properties: {
-    resource: {
-      id: 'conversations'
-      partitionKey: {
-        paths: ['/sessionId']
-        kind: 'Hash'
-      }
-    }
-  }
-}
-
-// =================================================================================================
-// 8. RBAC ROLE ASSIGNMENTS FOR COSMOS DB
-// =================================================================================================
-
-// Cosmos DB Built-in Data Contributor role for AKS System Identity
-// Role ID: 00000000-0000-0000-0000-000000000002 (Cosmos DB Built-in Data Contributor)
-resource cosmosRoleDefinition 'Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions@2023-11-15' existing = {
-  parent: cosmosAccount
-  name: '00000000-0000-0000-0000-000000000002'
-}
-
-// Assign Cosmos DB Data Contributor role to AKS System Identity
-resource cosmosRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-11-15' = {
-  parent: cosmosAccount
-  name: guid(cosmosAccount.id, aks.id, 'cosmoscontributor')
-  properties: {
-    roleDefinitionId: cosmosRoleDefinition.id
-    principalId: aks.identity.principalId
-    scope: cosmosAccount.id
-  }
-}
-
-// =================================================================================================
 // OUTPUTS
 // =================================================================================================
 
@@ -228,5 +154,4 @@ output aksClusterFqdn string = aks.properties.fqdn
 output containerRegistryName string = acr.name
 output containerRegistryEndpoint string = acr.properties.loginServer
 output openaiEndpoint string = openai.properties.endpoint
-output cosmosEndpoint string = cosmosAccount.properties.documentEndpoint
 output logAnalyticsWorkspaceId string = logAnalytics.id

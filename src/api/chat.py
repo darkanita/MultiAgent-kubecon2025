@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-# In-memory session store (in production, use Redis or database)
+# Initialize travel agent
 travel_agent = SemanticKernelTravelAgent()
+
+# In-memory session store
 active_sessions: Dict[str, str] = {}
 
 
@@ -112,7 +114,7 @@ async def stream_message(chat_message: ChatMessage):
 @router.get("/sessions")
 async def get_active_sessions():
     """Get list of active chat sessions"""
-    return {"active_sessions": list(active_sessions.keys())}
+    return {"active_sessions": list(active_sessions.keys()), "storage": "in_memory"}
 
 
 @router.delete("/sessions/{session_id}")

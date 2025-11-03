@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: acrmakubeconagent5h4hjd6w.azurecr.io/multiagent-kubecon-simple/app-kubeconagent:azd-deploy-1762127638
+        image: acrmakubeconagent5h4hjd6w.azurecr.io/multiagent-kubecon-simple/app-kubeconagent:cosmos-integration
         ports:
         - containerPort: 8000
         env:
@@ -35,16 +35,6 @@ spec:
           value: "gpt-4o-mini"
         - name: AZURE_OPENAI_API_VERSION
           value: "2024-08-01-preview"
-        - name: AZURE_COSMOS_ENDPOINT
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: AZURE_COSMOS_ENDPOINT
-        - name: AZURE_COSMOS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: cosmos-secret
-              key: AZURE_COSMOS_KEY
         - name: PORT
           value: "8000"
         resources:
