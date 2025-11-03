@@ -63,6 +63,49 @@ Transform the monolithic application into a **microservices architecture** where
 
 ---
 
+## 📡 **Important: A2A Protocol in Phase 2**
+
+### **Where Does A2A Live?**
+
+**A2A protocol stays ONLY in the Coordinator Service!**
+
+```
+External Agents
+      │
+      │ A2A Protocol
+      ▼
+┌──────────────────────┐
+│  Coordinator Service │  ◄── A2A Server here!
+│  • A2A Server (/a2a/)│
+│  • Agent Card        │
+│  • MCP Client        │
+└──────┬───────────────┘
+       │
+       │ MCP Protocol
+       ▼
+   Agent Services
+   (NO A2A, only MCP)
+```
+
+### **Why This Design?**
+
+1. **Single Entry Point**: External agents discover one unified Agent Card
+2. **Security**: Only coordinator exposed externally (LoadBalancer)
+3. **Simplicity**: Agent services focus on tools, not protocols
+4. **Flexibility**: Internal changes don't affect external API
+
+### **Protocol Responsibilities**
+
+| Service | A2A | MCP | REST | Web UI |
+|---------|-----|-----|------|--------|
+| **Coordinator** | ✅ Server | ✅ Client | ✅ Server | ✅ Serve |
+| **Currency Agent** | ❌ None | ✅ Server | ❌ None | ❌ None |
+| **Activity Agent** | ❌ None | ✅ Server | ❌ None | ❌ None |
+
+**For detailed explanation, see**: `docs/A2A_AND_MCP_EXPLAINED.md`
+
+---
+
 ## 🚀 Implementation Steps
 
 ## **Step 1: Restructure Code for Microservices**
@@ -80,7 +123,14 @@ mkdir -p src/services/activity-agent
 **Create**: `src/services/coordinator/main.py`
 
 ```python
-"""Coordinator Service - Main orchestrator with MCP client."""
+"""Coordinator Service - Main orchestrator with MCP client and A2A server.
+
+This service handles:
+- A2A Protocol: External agent discovery and task execution
+- MCP Protocol: Communication with internal microservice agents
+- Web UI: User interface
+- REST API: Direct chat endpoints
+"""
 import os
 import logging
 from fastapi import FastAPI
@@ -89,7 +139,7 @@ from fastapi.templating import Jinja2Templates
 import httpx
 
 from src.api.chat import router as chat_router
-from src.agent.a2a_server import A2AServer
+from src.agent.a2a_server import A2AServer  # ⭐ A2A stays in coordinator!
 from src.agent.mcp_coordinator import MCPCoordinator
 
 logging.basicConfig(level=logging.INFO)
@@ -137,10 +187,13 @@ async def shutdown_event():
 # Include API routes
 app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
 
-# Mount A2A server
+# ⭐ Mount A2A server - External agents connect here!
+# The A2A server internally uses MCP to call agent services
 httpx_client = httpx.AsyncClient()
 a2a_server = A2AServer(httpx_client, host="0.0.0.0", port=8000)
 app.mount("/a2a", a2a_server.get_starlette_app())
+
+logger.info("📡 [A2A] A2A Server mounted at /a2a/ - Agent Card available for discovery")
 
 @app.get("/health")
 async def health():
@@ -156,7 +209,13 @@ async def root():
 **Create**: `src/services/currency-agent/main.py`
 
 ```python
-"""Currency Agent Service - Standalone MCP server."""
+"""Currency Agent Service - Standalone MCP server.
+
+⚠️ NOTE: This service ONLY exposes MCP protocol, NOT A2A!
+         A2A protocol is handled by the coordinator service.
+         External agents discover the coordinator, which then
+         delegates to this service via MCP.
+"""
 import asyncio
 import logging
 from src.agent.mcp_currency_server import CurrencyMCPServer
@@ -209,7 +268,13 @@ CMD ["python", "-m", "src.services.currency-agent.main"]
 **Create**: `src/services/activity-agent/main.py`
 
 ```python
-"""Activity Agent Service - Standalone MCP server."""
+"""Activity Agent Service - Standalone MCP server.
+
+⚠️ NOTE: This service ONLY exposes MCP protocol, NOT A2A!
+         A2A protocol is handled by the coordinator service.
+         External agents discover the coordinator, which then
+         delegates to this service via MCP.
+"""
 import asyncio
 import logging
 from src.agent.mcp_activity_server import ActivityMCPServer
