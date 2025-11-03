@@ -37,6 +37,8 @@ class SemanticKernelTravelAgentExecutor(AgentExecutor):
             event_queue: Event queue for publishing task updates
         """
         query = context.get_user_input()
+        logger.info(f"📡 [A2A] Executing request: '{query[:100]}...'")
+        
         task = context.current_task
         if not task:
             task = new_task(context.message)
@@ -48,6 +50,7 @@ class SemanticKernelTravelAgentExecutor(AgentExecutor):
             text_content = partial['content']
 
             if require_input:
+                logger.info(f"📡 [A2A] Task requires user input")
                 await event_queue.enqueue_event(
                     TaskStatusUpdateEvent(
                         status=TaskStatus(
@@ -64,6 +67,7 @@ class SemanticKernelTravelAgentExecutor(AgentExecutor):
                     )
                 )
             elif is_done:
+                logger.info(f"✅ [A2A] Task completed successfully")
                 await event_queue.enqueue_event(
                     TaskArtifactUpdateEvent(
                         append=False,
@@ -86,6 +90,7 @@ class SemanticKernelTravelAgentExecutor(AgentExecutor):
                     )
                 )
             else:
+                logger.debug(f"📡 [A2A] Task working... streaming response chunk")
                 await event_queue.enqueue_event(
                     TaskStatusUpdateEvent(
                         status=TaskStatus(
@@ -106,5 +111,5 @@ class SemanticKernelTravelAgentExecutor(AgentExecutor):
         self, context: RequestContext, event_queue: EventQueue
     ) -> None:
         """Cancel the current task execution"""
-        logger.warning("Task cancellation requested but not implemented")
+        logger.warning("⚠️ [A2A] Task cancellation requested but not implemented")
         raise Exception('cancel not supported')

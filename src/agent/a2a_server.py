@@ -39,7 +39,7 @@ class A2AServer:
             http_handler=request_handler
         )
         
-        logger.info(f"A2A server configured for {self.host}:{self.port}")
+        logger.info(f"📡 [A2A] Server configured for {self.host}:{self.port}")
     
     def _get_agent_card(self) -> AgentCard:
         """Returns the Agent Card for the Semantic Kernel Travel Agent."""

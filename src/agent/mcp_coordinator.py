@@ -51,11 +51,11 @@ class MCPAgentClient:
             self._available_tools = tools_response.tools
             
             logger.info(
-                f"Connected to {self.agent_name} MCP server. "
+                f"🔌 [MCP] Connected to {self.agent_name} MCP server. "
                 f"Available tools: {[t.name for t in self._available_tools]}"
             )
         except Exception as e:
-            logger.error(f"Failed to connect to {self.agent_name} MCP server: {e}")
+            logger.error(f"❌ [MCP] Failed to connect to {self.agent_name} MCP server: {e}")
             raise
 
     async def disconnect(self):
@@ -63,7 +63,7 @@ class MCPAgentClient:
         if self.session:
             await self.session.__aexit__(None, None, None)
             self.session = None
-            logger.info(f"Disconnected from {self.agent_name} MCP server")
+            logger.info(f"🔌 [MCP] Disconnected from {self.agent_name} MCP server")
 
     async def list_tools(self) -> list[dict[str, Any]]:
         """List all available tools from this agent.
@@ -74,6 +74,8 @@ class MCPAgentClient:
         if not self.session:
             raise RuntimeError(f"Not connected to {self.agent_name}")
         
+        logger.info(f"🔧 [MCP] Getting tool definitions from {self.agent_name}: {[t.name for t in self._available_tools]}")
+        
         return [
             {
                 "name": tool.name,
@@ -83,25 +85,27 @@ class MCPAgentClient:
             for tool in self._available_tools
         ]
 
-    async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
-        """Call a specific tool on the MCP server.
+    async def call_tool(self, tool_name: str, arguments: dict) -> Any:
+        """Call a tool on the MCP server.
         
         Args:
             tool_name: Name of the tool to call
-            arguments: Arguments for the tool
+            arguments: Arguments to pass to the tool
             
         Returns:
             Tool execution result
         """
         if not self.session:
-            raise RuntimeError(f"Not connected to {self.agent_name}")
+            raise RuntimeError(f"Not connected to {self.agent_name} MCP server")
+        
+        logger.info(f"🚀 [MCP] Calling tool '{tool_name}' on {self.agent_name} with args: {arguments}")
         
         try:
             result = await self.session.call_tool(tool_name, arguments)
-            logger.info(f"Tool {tool_name} executed successfully on {self.agent_name}")
+            logger.info(f"✅ [MCP] Tool '{tool_name}' executed successfully on {self.agent_name}")
             return result
         except Exception as e:
-            logger.error(f"Error calling tool {tool_name} on {self.agent_name}: {e}")
+            logger.error(f"❌ [MCP] Error calling tool '{tool_name}' on {self.agent_name}: {e}")
             raise
 
 
@@ -172,7 +176,7 @@ class MCPCoordinator:
         for client in self.clients.values():
             await client.disconnect()
         self.clients.clear()
-        logger.info("MCP Coordinator shutdown complete")
+        logger.info("🔌 [MCP] MCP Coordinator shutdown complete")
 
 
 # Example usage

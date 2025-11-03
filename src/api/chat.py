@@ -37,6 +37,8 @@ class ChatResponse(BaseModel):
 async def send_message(chat_message: ChatMessage):
     """Send a message to the travel agent and get a response"""
     try:
+        logger.info(f"💬 [CHAT API] Received message: '{chat_message.message[:100]}...'")
+        
         # Generate session ID if not provided
         session_id = chat_message.session_id or str(uuid.uuid4())
         
@@ -62,6 +64,8 @@ async def send_message(chat_message: ChatMessage):
 async def stream_message(chat_message: ChatMessage):
     """Stream a response from the travel agent"""
     try:
+        logger.info(f"💬 [CHAT API] Streaming message: '{chat_message.message[:100]}...'")
+        
         # Generate session ID if not provided
         session_id = chat_message.session_id or str(uuid.uuid4())
         
