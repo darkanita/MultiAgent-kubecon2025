@@ -88,14 +88,16 @@ app = FastAPI(
 )
 
 # Mount static files
-static_path = Path(__file__).parent.parent.parent / "static"
+# In container: files are at /app/static and /app/templates
+# This file is at /app/src/services/coordinator/main.py
+static_path = Path("/app/static")
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 else:
     logger.warning(f"⚠️  Static files directory not found: {static_path}")
 
 # Setup templates
-templates_path = Path(__file__).parent.parent.parent / "templates"
+templates_path = Path("/app/templates")
 if templates_path.exists():
     templates = Jinja2Templates(directory=templates_path)
 else:
