@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activity-agent
+  namespace: multiagent-microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activity-agent
+  template:
+    metadata:
+      labels:
+        app: activity-agent
+    spec:
+      containers:
+      - name: activity-agent
+        image: ${AZURE_CONTAINER_REGISTRY_ENDPOINT}/activity-agent:${AZURE_CONTAINER_REGISTRY_TAG}
+        ports:
+        - containerPort: 8002
+        env:
+        - name: PORT
+          value: "8002"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: activity-agent
+  namespace: multiagent-microservices
+spec:
+  type: ClusterIP
+  selector:
+    app: activity-agent
+  ports:
+  - protocol: TCP
+    port: 8002
+    targetPort: 8002

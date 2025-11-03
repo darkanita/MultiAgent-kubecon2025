@@ -1,0 +1,17 @@
+# Dockerfile for Activity Agent Service (Phase 2 Microservices)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir -e .
+
+# Copy application code
+COPY src/ ./src/
+
+# Expose port
+EXPOSE 8002
+
+# Run activity agent service
+CMD ["python", "-m", "src.services.activity_agent.main"]

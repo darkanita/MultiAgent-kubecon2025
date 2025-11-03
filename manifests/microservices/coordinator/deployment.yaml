@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coordinator
+  namespace: multiagent-microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coordinator
+  template:
+    metadata:
+      labels:
+        app: coordinator
+    spec:
+      containers:
+      - name: coordinator
+        image: ${AZURE_CONTAINER_REGISTRY_ENDPOINT}/coordinator:${AZURE_CONTAINER_REGISTRY_TAG}
+        ports:
+        - containerPort: 8000
+        env:
+        - name: CURRENCY_AGENT_URL
+          value: "http://currency-agent:8001"
+        - name: ACTIVITY_AGENT_URL
+          value: "http://activity-agent:8002"
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: AZURE_OPENAI_ENDPOINT
+        - name: AZURE_OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: AZURE_OPENAI_API_KEY
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coordinator-service
+  namespace: multiagent-microservices
+spec:
+  type: LoadBalancer
+  selector:
+    app: coordinator
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000

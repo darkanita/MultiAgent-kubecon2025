@@ -1,0 +1,20 @@
+# Dockerfile for Coordinator Service (Phase 2 Microservices)
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir -e .
+
+# Copy application code
+COPY src/ ./src/
+COPY static/ ./static/
+COPY templates/ ./templates/
+COPY .env* ./
+
+# Expose port
+EXPOSE 8000
+
+# Run coordinator service
+CMD ["python", "-m", "src.services.coordinator.main"]

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currency-agent
+  namespace: multiagent-microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: currency-agent
+  template:
+    metadata:
+      labels:
+        app: currency-agent
+    spec:
+      containers:
+      - name: currency-agent
+        image: ${AZURE_CONTAINER_REGISTRY_ENDPOINT}/currency-agent:${AZURE_CONTAINER_REGISTRY_TAG}
+        ports:
+        - containerPort: 8001
+        env:
+        - name: PORT
+          value: "8001"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: currency-agent
+  namespace: multiagent-microservices
+spec:
+  type: ClusterIP
+  selector:
+    app: currency-agent
+  ports:
+  - protocol: TCP
+    port: 8001
+    targetPort: 8001
