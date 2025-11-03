@@ -7,8 +7,8 @@ and invoke tools from MCP servers (Currency Agent, Activity Agent, etc.).
 import logging
 from typing import Any
 
-from mcp.client import ClientSession
-from mcp.client.stdio import stdio_client
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,15 @@ class MCPAgentClient:
     async def connect(self):
         """Establish connection to the MCP server."""
         try:
+            # Create server parameters
+            server_params = StdioServerParameters(
+                command=self.command,
+                args=self.args
+            )
+            
             # Start the MCP server process and connect
-            self.session = await stdio_client(self.command, self.args).__aenter__()
+            stdio_transport = stdio_client(server_params)
+            self.session = await stdio_transport.__aenter__()
             
             # Initialize the session
             await self.session.initialize()
