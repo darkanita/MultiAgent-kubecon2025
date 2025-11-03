@@ -62,8 +62,11 @@ azd env set AZURE_OPENAI_API_KEY $OPENAI_KEY
 ### Step 3: Provision Infrastructure
 
 ```bash
+# AZD doesn't support --config flag, so copy the microservices config
+cp azure.microservices.yaml azure.yaml
+
 # This creates: AKS cluster, ACR (if not shared), networking, monitoring
-azd provision --config azure.microservices.yaml
+azd provision
 ```
 
 **Expected output:**
@@ -147,8 +150,12 @@ Before you can run `azd deploy`, you need to create the service code following *
 Once you've implemented the service code (following PHASE2_IMPLEMENTATION_PLAN.md), deploy:
 
 ```bash
+# Make sure you're using microservices config
+azd env select kubecon-micro
+cp azure.microservices.yaml azure.yaml
+
 # Deploy all 3 microservices
-azd deploy --config azure.microservices.yaml
+azd deploy
 ```
 
 This will:
@@ -172,13 +179,14 @@ OPENAI_ID=$(az cognitiveservices account list --resource-group rg-kubeconagent -
 azd env set SHARED_ACR_NAME $ACR_NAME
 azd env set SHARED_OPENAI_ID $OPENAI_ID
 
-# 3. Provision infrastructure
-azd provision --config azure.microservices.yaml
+# 3. Setup microservices config and provision
+cp azure.microservices.yaml azure.yaml
+azd provision
 
 # 4. Implement service code (see PHASE2_IMPLEMENTATION_PLAN.md)
 
 # 5. Deploy services
-azd deploy --config azure.microservices.yaml
+azd deploy
 ```
 
 ---

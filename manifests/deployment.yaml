@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: acrmakubeconagent5h4hjd6w.azurecr.io/multiagent-kubecon-simple/app-kubeconagent:mcp-phase1
+        image: acrmakubeconagent5h4hjd6w.azurecr.io/multiagent-kubecon-simple/app-kubeconagent:mcp-logging
         ports:
         - containerPort: 8000
         env:

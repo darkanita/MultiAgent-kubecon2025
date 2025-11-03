@@ -1,14 +1,14 @@
 # Dockerfile for Currency Agent Service (Phase 2 Microservices)
 FROM python:3.11-slim
 
-WORKDIR /app
+    WORKDIR /app
 
-# Copy requirements
-COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e .
-
-# Copy application code
-COPY src/ ./src/
+    # Copy and install requirements
+    COPY requirements-minimal.txt ./
+    RUN pip install --no-cache-dir -r requirements-minimal.txt
+    
+    # Copy application code
+    COPY src/ ./src/
 
 # Expose port
 EXPOSE 8001
