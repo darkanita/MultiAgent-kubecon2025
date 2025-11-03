@@ -19,6 +19,9 @@ param sharedAcrName string = ''
 @description('Optional: Use existing OpenAI from Phase 1 (leave empty to create new)')
 param sharedOpenAiId string = ''
 
+@description('Optional: Shared OpenAI endpoint if using existing')
+param sharedOpenAiEndpoint string = ''
+
 // =================================================================================================
 // VARIABLES
 // =================================================================================================
@@ -36,36 +39,19 @@ var useSharedAcr = !empty(sharedAcrName)
 var useSharedOpenAi = !empty(sharedOpenAiId)
 
 // =================================================================================================
-// EXISTING RESOURCES (IF SHARED)
-// =================================================================================================
-
-// Reference existing ACR if shared
-resource existingAcr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = if (useSharedAcr) {
-  name: sharedAcrName
-  scope: resourceGroup()
-}
-
-// Reference existing OpenAI if shared
-resource existingOpenAi 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = if (useSharedOpenAi) {
-  name: !empty(sharedOpenAiId) ? last(split(sharedOpenAiId, '/')) : 'dummy'
-  scope: resourceGroup(!empty(sharedOpenAiId) ? split(sharedOpenAiId, '/')[4] : resourceGroup().name)
-}
-
-// =================================================================================================
 // MICROSERVICES INFRASTRUCTURE MODULE
 // =================================================================================================
 
 module microservicesInfra './modules/microservices-aks.bicep' = {
   name: 'microservices-infrastructure'
   params: {
-    environmentName: environmentName
     location: location
     resourceToken: resourceToken
     tags: tags
     useSharedAcr: useSharedAcr
     sharedAcrName: useSharedAcr ? sharedAcrName : ''
     useSharedOpenAi: useSharedOpenAi
-    sharedOpenAiEndpoint: useSharedOpenAi ? existingOpenAi.properties.endpoint : ''
+    sharedOpenAiEndpoint: ''  // Will be set via azd env
   }
 }
 
@@ -73,27 +59,40 @@ module microservicesInfra './modules/microservices-aks.bicep' = {
 // RBAC - GRANT AKS ACCESS TO RESOURCES
 // =================================================================================================
 
-// Grant AKS access to ACR (either shared or new)
-var acrResourceId = useSharedAcr ? existingAcr.id : microservicesInfra.outputs.containerRegistryId
-resource aksAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(microservicesInfra.outputs.aksClusterId, acrResourceId, 'AcrPull')
-  scope: useSharedAcr ? existingAcr : resourceGroup()
-  properties: {
-    principalId: microservicesInfra.outputs.aksKubeletIdentityObjectId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull
-    principalType: 'ServicePrincipal'
+// Grant AKS access to new ACR (if created)
+module acrRoleAssignment './modules/acr-role.bicep' = if (!useSharedAcr) {
+  name: 'acr-role-assignment'
+  params: {
+    aksKubeletIdentityObjectId: microservicesInfra.outputs.aksKubeletIdentityObjectId
+    acrName: microservicesInfra.outputs.containerRegistryName
   }
 }
 
-// Grant AKS access to OpenAI (either shared or new)
-var openAiResourceId = useSharedOpenAi ? existingOpenAi.id : microservicesInfra.outputs.openAiId
-resource aksOpenAiUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(microservicesInfra.outputs.aksClusterId, openAiResourceId, 'CognitiveServicesOpenAIUser')
-  scope: useSharedOpenAi ? existingOpenAi : resourceGroup()
-  properties: {
-    principalId: microservicesInfra.outputs.aksKubeletIdentityObjectId
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd') // Cognitive Services OpenAI User
-    principalType: 'ServicePrincipal'
+// Grant AKS access to shared ACR (if using existing)
+module sharedAcrRoleAssignment './modules/acr-role.bicep' = if (useSharedAcr) {
+  name: 'shared-acr-role-assignment'
+  params: {
+    aksKubeletIdentityObjectId: microservicesInfra.outputs.aksKubeletIdentityObjectId
+    acrName: sharedAcrName
+  }
+}
+
+// Grant AKS access to new OpenAI (if created)
+module openAiRoleAssignment './modules/openai-role.bicep' = if (!useSharedOpenAi) {
+  name: 'openai-role-assignment'
+  params: {
+    aksKubeletIdentityObjectId: microservicesInfra.outputs.aksKubeletIdentityObjectId
+    openAiName: split(microservicesInfra.outputs.openAiId, '/')[8]
+  }
+}
+
+// Grant AKS access to shared OpenAI (if using existing)
+module sharedOpenAiRoleAssignment './modules/openai-role.bicep' = if (useSharedOpenAi) {
+  name: 'shared-openai-role-assignment'
+  scope: resourceGroup(split(sharedOpenAiId, '/')[2], split(sharedOpenAiId, '/')[4])
+  params: {
+    aksKubeletIdentityObjectId: microservicesInfra.outputs.aksKubeletIdentityObjectId
+    openAiName: last(split(sharedOpenAiId, '/'))
   }
 }
 
@@ -120,20 +119,20 @@ output AZURE_AKS_CLUSTER_ID string = microservicesInfra.outputs.aksClusterId
 
 // Container Registry
 @description('The name of the container registry')
-output AZURE_CONTAINER_REGISTRY_NAME string = useSharedAcr ? existingAcr.name : microservicesInfra.outputs.containerRegistryName
+output AZURE_CONTAINER_REGISTRY_NAME string = useSharedAcr ? sharedAcrName : microservicesInfra.outputs.containerRegistryName
 
 @description('The login server of the container registry')
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = useSharedAcr ? existingAcr.properties.loginServer : microservicesInfra.outputs.containerRegistryEndpoint
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = useSharedAcr ? '${sharedAcrName}.azurecr.io' : microservicesInfra.outputs.containerRegistryEndpoint
 
 // AI Services
 @description('The endpoint for the Azure OpenAI service')
-output AZURE_OPENAI_ENDPOINT string = useSharedOpenAi ? existingOpenAi.properties.endpoint : microservicesInfra.outputs.openAiEndpoint
+output AZURE_OPENAI_ENDPOINT string = useSharedOpenAi ? sharedOpenAiEndpoint : microservicesInfra.outputs.openAiEndpoint
 
 @description('The name of the Azure OpenAI deployment')
 output AZURE_OPENAI_DEPLOYMENT_NAME string = 'gpt-4o-mini'
 
 @description('The resource ID of Azure OpenAI')
-output AZURE_OPENAI_ID string = useSharedOpenAi ? existingOpenAi.id : microservicesInfra.outputs.openAiId
+output AZURE_OPENAI_ID string = useSharedOpenAi ? sharedOpenAiId : microservicesInfra.outputs.openAiId
 
 // Monitoring
 @description('The Log Analytics workspace ID')

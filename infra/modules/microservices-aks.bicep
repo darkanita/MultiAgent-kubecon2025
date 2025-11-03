@@ -2,9 +2,6 @@
 // MICROSERVICES AKS MODULE - RESOURCE GROUP SCOPE (PHASE 2)
 // ===================================================================================================
 
-@description('Environment name for resource naming')
-param environmentName string
-
 @description('Primary location for all resources')
 param location string
 
