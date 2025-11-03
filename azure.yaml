@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: multiagent-kubecon-simple
+metadata:
+  template: multiagent-kubecon-simple@1.0.0
+  description: Multi-Agent AI System - Simple Single Environment
+
+# SERVICES CONFIGURATION - SIMPLE START
+services:
+  # Main application (start simple, can separate later)
+  app:
+    project: .
+    language: py
+    host: aks
+    k8s:
+      manifests:
+        - ./manifests
+
+# INFRASTRUCTURE CONFIGURATION
+infra:
+  provider: bicep
+  path: infra
+  module: main
+
+# RESOURCE GROUP NAMING
+resourceGroup: rg-${AZURE_ENV_NAME}
+
+# HOOKS (optional - for custom deployment steps)
+hooks:
+  postdeploy:
+    shell: sh
+    run: echo "Deployment completed! Check your resources in Azure Portal"
+    interactive: false
+    continueOnError: false

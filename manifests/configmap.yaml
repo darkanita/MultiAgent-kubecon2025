@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  AZURE_OPENAI_ENDPOINT: "https://oai-5h4hjd6wjnu74.openai.azure.com/"
+  AZURE_COSMOS_ENDPOINT: "https://cosmos-5h4hjd6wjnu74.documents.azure.com:443/"
