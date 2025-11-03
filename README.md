@@ -1,7 +1,7 @@
 # Multi-Agent AI System on Azure Kubernetes Service (AKS)
 
 > **🎯 KubeCon 2025 Demo**  
-> Production-ready Multi-Agent AI system deployed on Azure Kubernetes Service (AKS), featuring Semantic Kernel agents with A2A (Agent-to-Agent) and MCP (Model Context Protocol) integration.
+> Production-ready Multi-Agent AI system with dual-protocol support (A2A + MCP), deployed on Azure Kubernetes Service.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/darkanita/MultiAgent-kubecon2025)
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template)
@@ -10,95 +10,150 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![Azure](https://img.shields.io/badge/Azure-AKS-0078D4?logo=microsoftazure)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28+-326CE5?logo=kubernetes)
-![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-1.22-512BD4)
+![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-1.30-512BD4)
+![MCP](https://img.shields.io/badge/MCP-1.0-green)
+![A2A](https://img.shields.io/badge/A2A-0.2.9-orange)
 
-A cloud-native multi-agent application combining Semantic Kernel AI agents with Google's Agent-to-Agent (A2A) protocol, deployed on Azure Kubernetes Service with complete infrastructure automation using Azure Developer CLI (AZD).
+## 📖 About
+
+A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel with **dual protocol support**:
+- **A2A Protocol** (Agent-to-Agent) for service discovery
+- **MCP Protocol** (Model Context Protocol) for tool execution
+
+Currently deployed as a **monolithic application** on AKS (main branch), with **microservices architecture** under development (microservices branch).
+
+---
+
+## 🏗️ Architecture Overview
+
+### **Current: Monolithic + MCP Integration** (Phase 1 Complete ✅)
+
+### **Current: Monolithic + MCP Integration** (Phase 1 Complete ✅)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    FastAPI Application (Single Pod)              │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                  Web Interface Layer                       │ │
+│  │  • Chat UI (HTML/CSS/JavaScript)                          │ │
+│  │  • Real-time streaming responses                          │ │
+│  │  • Session management                                     │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                             ▼                                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                    REST API Layer                          │ │
+│  │  • POST /api/chat/message - Send messages                 │ │
+│  │  • POST /api/chat/stream - Streaming responses            │ │
+│  │  • GET /api/chat/sessions - List sessions                 │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                             ▼                                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                  A2A Protocol Layer                        │ │
+│  │  • GET /a2a/ - Agent Card discovery                       │ │
+│  │  • Agent metadata and capabilities                        │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                             ▼                                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │             Semantic Kernel Orchestration                  │ │
+│  │  ┌──────────────────────────────────────────────────────┐ │ │
+│  │  │         TravelManagerAgent (Coordinator)             │ │ │
+│  │  │  • Analyzes user requests                            │ │ │
+│  │  │  • Delegates to specialized agents                   │ │ │
+│  │  │  • Aggregates responses                              │ │ │
+│  │  └──────────────────────────────────────────────────────┘ │ │
+│  │            ▼                              ▼                │ │
+│  │  ┌──────────────────────┐  ┌──────────────────────────┐  │ │
+│  │  │ CurrencyExchangeAgent│  │  ActivityPlannerAgent    │  │ │
+│  │  │                      │  │                          │  │ │
+│  │  │ 🔧 MCP Tools:        │  │ 🔧 MCP Tools:            │  │ │
+│  │  │  • get_exchange_rate │  │  • plan_activities       │  │ │
+│  │  │  • convert_amount    │  │  • suggest_restaurants   │  │ │
+│  │  │                      │  │  • suggest_attractions   │  │ │
+│  │  │ 🌐 Frankfurter API   │  │ 💡 AI-powered planning   │  │ │
+│  │  └──────────────────────┘  └──────────────────────────┘  │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                             ▼                                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │              Azure OpenAI Integration                      │ │
+│  │  • Model: gpt-4o-mini                                      │ │
+│  │  • Managed Identity authentication                         │ │
+│  │  • Function calling for tool execution                     │ │
+│  └────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+              ┌──────────────────────────────┐
+              │  Kubernetes Service (LoadBalancer)  │
+              │  External IP: http://172.168.108.4  │
+              └──────────────────────────────────┘
+```
+
+### **Coming Soon: Microservices Architecture** (Phase 2 🚧)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   Coordinator Service (Pod 1)                    │
+│  • Travel Manager Agent                                         │
+│  • MCP Client (calls other agents)                             │
+│  • A2A Discovery                                                │
+└────────┬────────────────────────────────────────────────────────┘
+         │
+         ├──── A2A Discovery ────┬──── MCP Calls ────┐
+         ▼                       ▼                    ▼
+┌──────────────────┐   ┌──────────────────┐  ┌──────────────────┐
+│ Currency Service │   │ Activity Service │  │ Future Agents    │
+│     (Pod 2)      │   │     (Pod 3)      │  │   (Pod N)        │
+├──────────────────┤   ├──────────────────┤  ├──────────────────┤
+│ • A2A Endpoint   │   │ • A2A Endpoint   │  │ • HR Agent       │
+│ • MCP Server     │   │ • MCP Server     │  │ • Flight Agent   │
+│ • 2 Tools        │   │ • 3 Tools        │  │ • Hotel Agent    │
+└──────────────────┘   └──────────────────┘  └──────────────────┘
+```
+
+---
 
 ## ✨ Key Features
 
-### 🤖 AI-Powered Travel Assistant
-- **Currency Exchange**: Real-time exchange rates using the Frankfurter API
-- **Trip Planning**: Personalized itinerary creation and recommendations
-- **Activity Suggestions**: Curated local activities and attractions
-- **Dining Recommendations**: Restaurant suggestions based on budget and preferences
+### 🤖 **Dual Protocol Support** (NEW!)
+- **A2A Protocol**: Agent discovery and service registration
+- **MCP Protocol**: Standardized tool invocation and execution
+- **5 MCP Tools**: Currency (2) + Activity Planning (3)
+- **Seamless Integration**: Both protocols work together harmoniously
 
-### 🌐 Modern Web Interface
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Real-time Chat**: Interactive chat interface with typing indicators
-- **Streaming Responses**: Live streaming of AI responses for better UX
-- **Session Management**: Maintains conversation context across interactions
+### 💱 **Currency Exchange Agent**
+- Real-time exchange rates via Frankfurter API
+- Support for 30+ currencies
+- Amount conversion with live rates
+- **MCP Tools**:
+  - `get_exchange_rate` - Get current exchange rate
+  - `convert_amount` - Convert specific amounts
 
-### 🔗 A2A Protocol Integration
-- **Agent Discovery**: Advertises capabilities through structured Agent Cards
-- **Task Coordination**: Supports multi-agent task delegation and coordination
-- **Streaming Support**: Full streaming capabilities for real-time interactions
-- **Protocol Compliance**: Fully compliant with Google's A2A specification
+### 🗺️ **Activity Planning Agent**
+- Personalized trip itineraries
+- Restaurant recommendations by cuisine and budget
+- Tourist attraction suggestions by category
+- **MCP Tools**:
+  - `plan_activities` - Generate day-by-day itineraries
+  - `suggest_restaurants` - Dining recommendations
+  - `suggest_attractions` - Sightseeing suggestions
 
-### ☁️ Azure-Ready Deployment
-- **App Service Optimized**: Configured for Azure App Service deployment
-- **Azure Developer CLI**: Complete AZD template for easy deployment
-- **Environment Management**: Secure handling of API keys and configuration
-- **Monitoring**: Application Insights integration for observability
+### 🌐 **Modern Web Interface**
+- Responsive chat UI
+- Real-time streaming responses
+- Session management
+- Mobile-friendly design
 
-# Multi-Agent AI System on Azure Kubernetes Service (AKS)
+### ☁️ **Azure-Native Deployment**
+- Azure Kubernetes Service (AKS)
+- Azure OpenAI Service
+- Azure Container Registry (ACR)
+- Azure Developer CLI (AZD) automation
+- Managed Identity authentication
 
-> **🎯 KubeCon 2025 Demo**  
-> This project demonstrates a production-ready Multi-Agent AI system deployed on Azure Kubernetes Service (AKS), featuring Semantic Kernel agents with A2A (Agent-to-Agent) and MCP (Model Context Protocol) integration.
+---
 
-A cloud-native multi-agent application combining Semantic Kernel AI agents with Google's Agent-to-Agent (A2A) protocol, deployed on Azure Kubernetes Service with complete infrastructure automation using Azure Developer CLI (AZD).
-
-## 🏗️ Architecture
-
-### **Deployed Infrastructure**
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                            Azure Subscription                                   │
-│  ┌───────────────────────────────────────────────────────────────────────────┐ │
-│  │                     Resource Group: rg-{environmentName}                  │ │
-│  │                                                                           │ │
-│  │  ┌─────────────────────────────────────────────────────────────────┐    │ │
-│  │  │              Azure Kubernetes Service (AKS)                     │    │ │
-│  │  │  ┌───────────────────────────────────────────────────────────┐ │    │ │
-│  │  │  │        Namespace: multiagent-kubecon-simple              │ │    │ │
-│  │  │  │  ┌────────────────────────────────────────────────────┐  │ │    │ │
-│  │  │  │  │          Pod: multiagent-app                       │  │ │    │ │
-│  │  │  │  │  ┌──────────────────────────────────────────────┐ │  │ │    │ │
-│  │  │  │  │  │         FastAPI Application                  │ │  │ │    │ │
-│  │  │  │  │  │  ┌────────────────────────────────────────┐ │ │  │ │    │ │
-│  │  │  │  │  │  │      Web UI (HTML/CSS/JS)              │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Chat Interface                      │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Real-time Streaming                 │ │ │  │ │    │ │
-│  │  │  │  │  │  └────────────────────────────────────────┘ │ │  │ │    │ │
-│  │  │  │  │  │  ┌────────────────────────────────────────┐ │ │  │ │    │ │
-│  │  │  │  │  │  │      REST API (/api/chat)              │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Message Endpoint                    │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Streaming Endpoint                  │ │ │  │ │    │ │
-│  │  │  │  │  │  └────────────────────────────────────────┘ │ │  │ │    │ │
-│  │  │  │  │  │  ┌────────────────────────────────────────┐ │ │  │ │    │ │
-│  │  │  │  │  │  │      A2A Server (/a2a)                 │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Agent Card Discovery                │ │ │  │ │    │ │
-│  │  │  │  │  │  │  - Task Coordination                   │ │ │  │ │    │ │
-│  │  │  │  │  │  └────────────────────────────────────────┘ │ │  │ │    │ │
-│  │  │  │  │  │  ┌────────────────────────────────────────┐ │ │  │ │    │ │
-│  │  │  │  │  │  │   Semantic Kernel Multi-Agent          │ │ │  │ │    │ │
-│  │  │  │  │  │  │  ┌──────────────────────────────────┐ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  TravelManagerAgent             │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  (Main Orchestrator)            │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  └──────────────────────────────────┘ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  ┌──────────────────────────────────┐ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  CurrencyExchangeAgent          │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  (Frankfurter API)              │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  └──────────────────────────────────┘ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  ┌──────────────────────────────────┐ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  ActivityPlannerAgent           │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  │  (Trip Planning)                │ │ │ │  │ │    │ │
-│  │  │  │  │  │  │  └──────────────────────────────────┘ │ │ │  │ │    │ │
-│  │  │  │  │  │  └────────────────────────────────────────┘ │ │  │ │    │ │
-│  │  │  │  │  └──────────────────────────────────────────────┘ │  │ │    │ │
-│  │  │  │  │  Port: 8000                                        │  │ │    │ │
-│  │  │  │  └────────────────────────────────────────────────────┘  │ │    │ │
-│  │  │  │                                                           │ │    │ │
+## 📁 Project Structure
 │  │  │  │  ┌────────────────────────────────────────────────────┐  │ │    │ │
 │  │  │  │  │  Service: multiagent-service (LoadBalancer)        │  │ │    │ │
 │  │  │  │  │  External IP: 172.168.108.4                        │  │ │    │ │
@@ -484,56 +539,216 @@ chat_service = get_chat_completion_service(ChatServices.OPENAI)
 - `POST /a2a/tasks/send` - Send tasks to the agent
 - `POST /a2a/tasks/stream` - Stream tasks with real-time updates
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-semantic-kernel-travel-agent/
+MultiAgent-kubecon2025/
 ├── src/
-│   ├── agent/                  # Semantic Kernel agent implementation
-│   │   ├── travel_agent.py     # Full Semantic Kernel travel agent
-│   │   ├── agent_executor.py   # A2A protocol executor
-│   │   └── a2a_server.py       # A2A server integration
-│   └── api/
-│       └── chat.py             # REST API endpoints
+│   ├── agent/                       # Agent implementation
+│   │   ├── travel_agent.py          # Semantic Kernel multi-agent orchestration
+│   │   ├── agent_executor.py        # A2A protocol executor
+│   │   ├── a2a_server.py            # A2A server integration
+│   │   ├── mcp_currency_server.py   # 🆕 MCP server for currency agent
+│   │   ├── mcp_activity_server.py   # 🆕 MCP server for activity agent
+│   │   └── mcp_coordinator.py       # 🆕 MCP client coordinator
+│   ├── api/
+│   │   └── chat.py                  # REST API endpoints
+│   └── storage/
+│       └── cosmos_storage.py        # (Removed - using in-memory)
 ├── templates/
-│   └── index.html              # Modern web interface
+│   └── index.html                   # Modern web chat interface
 ├── static/
-│   ├── css/style.css           # Modern CSS styling
-│   └── js/chat.js              # Interactive chat functionality
-├── infra/                      # Azure infrastructure (Bicep)
-├── main.py                     # FastAPI application entry point
-├── azure.yaml                  # Azure Developer CLI configuration
-├── pyproject.toml              # Python project configuration
-└── .env                        # Environment configuration
+│   ├── css/style.css                # Responsive styling
+│   └── js/chat.js                   # Real-time chat functionality
+├── manifests/                       # Kubernetes deployment files
+│   └── deployment.yaml              # AKS deployment configuration
+├── infra/                           # Azure infrastructure (Bicep)
+│   ├── main.bicep                   # Main infrastructure template
+│   └── modules/
+│       └── core-resources.bicep     # AKS, ACR, OpenAI resources
+├── docs/                            # 🆕 Documentation
+│   ├── MCP_INTEGRATION.md           # MCP protocol integration guide
+│   └── PHASE1_TEST_RESULTS.md       # Phase 1 testing results
+├── test_mcp_simple.py               # 🆕 MCP integration tests
+├── test_mcp_local.py                # 🆕 Full MCP test suite (WIP)
+├── main.py                          # FastAPI application entry point
+├── azure.yaml                       # Azure Developer CLI config
+├── pyproject.toml                   # Python dependencies (includes MCP!)
+├── Dockerfile                       # Container image definition
+└── README.md                        # This file
 ```
 
-## Development
+---
 
-### Running the Application Locally
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10+
+- Azure subscription
+- Azure CLI
+- Azure Developer CLI (azd)
+- kubectl
+
+### 1. Clone and Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/darkanita/MultiAgent-kubecon2025.git
+cd MultiAgent-kubecon2025
+
+# Choose your branch
+git checkout main              # Stable monolithic version (deployed)
+# OR
+git checkout microservices     # MCP-enabled version (development)
+```
+
+### 2. Deploy to Azure
+
+```bash
+# Login to Azure
+azd auth login
+
+# Provision and deploy
+azd up
+
+# Get the external IP
+kubectl get service -n multiagent-kubecon-simple
+```
+
+### 3. Test Locally (MCP Branch)
+
 ```bash
 # Activate virtual environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# Start the server with hot reload
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Install dependencies
+pip install -e .
+
+# Run MCP integration tests
+python test_mcp_simple.py
+
+# Start the application
+uvicorn main:app --reload
 ```
 
-### Testing the Agent
-Try these example queries in the web interface:
+---
 
-1. **Currency Conversion**: "What's the current USD to EUR exchange rate?"
-2. **Trip Planning**: "Plan a 3-day budget trip to Tokyo with $200/day"
-3. **Multi-agent Query**: "I have 500 USD budget for Seoul - convert to KRW and suggest activities"
-4. **Restaurant Recommendations**: "Find affordable restaurants in Paris near the Eiffel Tower"
+## 💬 Example Queries
 
-## A2A Protocol Integration
+Try these in the chat interface:
 
-This application fully implements Google's Agent-to-Agent protocol:
+1. **Currency + Planning**:  
+   *"I'm traveling to Seoul for 2 days with $100/day. Convert to KRW and suggest activities."*
 
-- **Agent Discovery**: Publishes structured Agent Cards describing capabilities
-- **Task Coordination**: Supports complex multi-agent workflows
-- **Streaming**: Real-time streaming of responses and intermediate results
-- **Session Management**: Maintains context across multi-turn conversations
+2. **Restaurant Recommendations**:  
+   *"Find budget-friendly Korean restaurants in Gangnam district."*
+
+3. **Activity Planning**:  
+   *"Plan a cultural 3-day itinerary for Kyoto with moderate budget."*
+
+4. **Currency Conversion**:  
+   *"What's 500 USD in Japanese Yen?"*
+
+---
+
+## 🔧 MCP Tools Available
+
+### Currency Exchange Agent
+| Tool | Description |
+|------|-------------|
+| `get_exchange_rate` | Get current exchange rate between two currencies |
+| `convert_amount` | Convert a specific amount from one currency to another |
+
+### Activity Planner Agent
+| Tool | Description |
+|------|-------------|
+| `plan_activities` | Generate day-by-day activity itinerary |
+| `suggest_restaurants` | Dining recommendations by cuisine/budget |
+| `suggest_attractions` | Tourist attractions by category |
+
+---
+
+## 🌐 Protocol Integration
+
+### A2A Protocol (Agent-to-Agent)
+- ✅ Agent discovery via Agent Cards
+- ✅ Task coordination and delegation
+- ✅ Streaming support
+- ✅ Session management
+- 📍 Endpoint: `/a2a/`
+
+### MCP Protocol (Model Context Protocol) 🆕
+- ✅ Standardized tool definitions
+- ✅ Type-safe function calling
+- ✅ Stdio-based communication
+- ✅ 5 tools across 2 agents
+- 📖 Docs: `docs/MCP_INTEGRATION.md`
+
+---
+
+## 🧪 Testing
+
+### Run MCP Integration Tests
+```bash
+# Basic validation (recommended)
+python test_mcp_simple.py
+
+# Full integration test (WIP)
+python test_mcp_local.py
+```
+
+### Expected Output
+```
+✅ PASSED: Module Imports
+✅ PASSED: Tool Definitions
+✅ PASSED: Currency Server
+✅ PASSED: Activity Server
+```
+
+See `docs/PHASE1_TEST_RESULTS.md` for detailed results.
+
+---
+
+## 📊 Branches
+
+| Branch | Status | Description |
+|--------|--------|-------------|
+| `main` | ✅ Deployed | Stable monolithic app on AKS |
+| `microservices` | 🚧 Development | MCP-enabled, preparing for microservices split |
+
+---
+
+## 🗺️ Roadmap
+
+- [x] **Phase 1**: MCP Integration (Complete ✅)
+  - [x] Add MCP SDK
+  - [x] Create MCP servers for agents
+  - [x] Define 5 MCP tools
+  - [x] Testing and documentation
+
+- [ ] **Phase 2**: Microservices Architecture (In Progress 🚧)
+  - [ ] Split into separate services
+  - [ ] Independent Dockerfiles
+  - [ ] Kubernetes multi-service deployment
+  - [ ] Service discovery via K8s DNS
+
+- [ ] **Phase 3**: Add New Agents (Planned 📅)
+  - [ ] HR Agent (human resources)
+  - [ ] Flight Booking Agent
+  - [ ] Hotel Reservation Agent
+  - [ ] Dynamic agent registration
+
+---
+
+## 📚 Documentation
+
+- [MCP Integration Guide](docs/MCP_INTEGRATION.md)
+- [Phase 1 Test Results](docs/PHASE1_TEST_RESULTS.md)
+- [Azure Setup Guide](AZURE_SETUP.md)
+- [Security Guidelines](SECURITY.md)
+
+---
 
 ### Agent Card Example
 
