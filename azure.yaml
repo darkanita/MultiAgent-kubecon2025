@@ -9,7 +9,6 @@ metadata:
 services:
   # Coordinator Service (A2A + MCP Client + Web UI)
   coordinator:
-    project: ./src/services/coordinator
     language: py
     host: aks
     docker:
@@ -21,7 +20,6 @@ services:
 
   # Currency Agent Service (MCP Server)
   currency-agent:
-    project: ./src/services/currency_agent
     language: py
     host: aks
     docker:
@@ -33,7 +31,6 @@ services:
 
   # Activity Agent Service (MCP Server)
   activity-agent:
-    project: ./src/services/activity_agent
     language: py
     host: aks
     docker:

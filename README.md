@@ -20,95 +20,147 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
 - **A2A Protocol** (Agent-to-Agent) for service discovery
 - **MCP Protocol** (Model Context Protocol) for tool execution
 
-Currently deployed as a **monolithic application** on AKS (main branch), with **microservices architecture** under development (microservices branch).
+**Two deployment options available**:
+- **Phase 1**: Monolithic application (main branch) - ✅ Deployed at http://172.168.108.4
+- **Phase 2**: Microservices architecture (microservices branch) - ✅ Deployed at http://172.169.51.14
 
 ---
 
 ## 🏗️ Architecture Overview
 
-### **Current: Monolithic + MCP Integration** (Phase 1 Complete ✅)
-
-### **Current: Monolithic + MCP Integration** (Phase 1 Complete ✅)
+### **Phase 1: Monolithic + MCP Integration** (✅ Deployed at 172.168.108.4)
 
 ```
+┌───────────────────────────────────────────────────────────────────────┐
+│                        EXTERNAL WORLD                                 │
+│  • Web Browser Users  • Other A2A Agents  • API Clients              │
+└───────────────────────┬───────────────────────────────────────────────┘
+                        │
+                        │ 📡 A2A PROTOCOL
+                        │  - GET /a2a/ (Agent Card)
+                        │  - POST /a2a/tasks/send (Task Delegation)
+                        │  - POST /api/chat/message (REST API)
+                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    FastAPI Application (Single Pod)              │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │                  Web Interface Layer                       │ │
-│  │  • Chat UI (HTML/CSS/JavaScript)                          │ │
-│  │  • Real-time streaming responses                          │ │
-│  │  • Session management                                     │ │
-│  └────────────────────────────────────────────────────────────┘ │
-│                             ▼                                   │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    REST API Layer                          │ │
-│  │  • POST /api/chat/message - Send messages                 │ │
-│  │  • POST /api/chat/stream - Streaming responses            │ │
-│  │  • GET /api/chat/sessions - List sessions                 │ │
-│  └────────────────────────────────────────────────────────────┘ │
-│                             ▼                                   │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │                  A2A Protocol Layer                        │ │
-│  │  • GET /a2a/ - Agent Card discovery                       │ │
-│  │  • Agent metadata and capabilities                        │ │
-│  └────────────────────────────────────────────────────────────┘ │
-│                             ▼                                   │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │             Semantic Kernel Orchestration                  │ │
-│  │  ┌──────────────────────────────────────────────────────┐ │ │
-│  │  │         TravelManagerAgent (Coordinator)             │ │ │
-│  │  │  • Analyzes user requests                            │ │ │
-│  │  │  • Delegates to specialized agents                   │ │ │
-│  │  │  • Aggregates responses                              │ │ │
-│  │  └──────────────────────────────────────────────────────┘ │ │
-│  │            ▼                              ▼                │ │
-│  │  ┌──────────────────────┐  ┌──────────────────────────┐  │ │
-│  │  │ CurrencyExchangeAgent│  │  ActivityPlannerAgent    │  │ │
-│  │  │                      │  │                          │  │ │
-│  │  │ 🔧 MCP Tools:        │  │ 🔧 MCP Tools:            │  │ │
-│  │  │  • get_exchange_rate │  │  • plan_activities       │  │ │
-│  │  │  • convert_amount    │  │  • suggest_restaurants   │  │ │
-│  │  │                      │  │  • suggest_attractions   │  │ │
-│  │  │ 🌐 Frankfurter API   │  │ 💡 AI-powered planning   │  │ │
-│  │  └──────────────────────┘  └──────────────────────────┘  │ │
-│  └────────────────────────────────────────────────────────────┘ │
-│                             ▼                                   │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Azure OpenAI Integration                      │ │
-│  │  • Model: gpt-4o-mini                                      │ │
-│  │  • Managed Identity authentication                         │ │
-│  │  • Function calling for tool execution                     │ │
-│  └────────────────────────────────────────────────────────────┘ │
+│              FastAPI Application (Single Pod)                    │
+│              LoadBalancer: http://172.168.108.4                  │
+├─────────────────────────────────────────────────────────────────┤
+│  📡 A2A SERVER (Port 8000)                                      │
+│     • GET /a2a/ - Agent Card discovery                          │
+│     • POST /a2a/tasks/send - Task delegation                    │
+│                                                                 │
+│  🌐 WEB UI (Port 8000)                                          │
+│     • Chat Interface (HTML/CSS/JavaScript)                      │
+│     • Real-time streaming responses                             │
+│     • Session management                                        │
+│                                                                 │
+│  🤖 SEMANTIC KERNEL ORCHESTRATION                               │
+│     ┌─────────────────────────────────────────────────────┐    │
+│     │  TravelManagerAgent (Coordinator)                   │    │
+│     │  • Analyzes user requests                           │    │
+│     │  • Delegates to specialized agents (in-process)     │    │
+│     │  • Aggregates responses                             │    │
+│     └───────────┬──────────────────┬──────────────────────┘    │
+│                 │                  │                            │
+│                 │ (In-Process      │ (In-Process                │
+│                 │  Function Call)  │  Function Call)            │
+│                 ▼                  ▼                            │
+│     ┌───────────────────┐  ┌─────────────────────────┐         │
+│     │ CurrencyExchange  │  │  ActivityPlanner Agent  │         │
+│     │     Agent         │  │                         │         │
+│     │                   │  │                         │         │
+│     │ 🔧 MCP Tools:     │  │ 🔧 MCP Tools:           │         │
+│     │  • exchange_rate  │  │  • plan_activities      │         │
+│     │  • convert_amount │  │  • suggest_restaurants  │         │
+│     │                   │  │  • suggest_attractions  │         │
+│     │                   │  │                         │         │
+│     │ 🌐 Frankfurter API│  │ 💡 AI-powered planning  │         │
+│     └───────────────────┘  └─────────────────────────┘         │
+│                                                                 │
+│  ⚡ AZURE OPENAI INTEGRATION                                    │
+│     • Model: gpt-4o-mini                                        │
+│     • Function calling for tool execution                       │
+│     • Managed Identity authentication                           │
 └─────────────────────────────────────────────────────────────────┘
-                             │
-                             ▼
-              ┌──────────────────────────────┐
-              │  Kubernetes Service (LoadBalancer)  │
-              │  External IP: http://172.168.108.4  │
-              └──────────────────────────────────┘
+
+─────────────────────────────────────────────────────────────────────────
+🔑 Protocol Notes:
+  📡 A2A = External agents can discover and delegate tasks
+  🔧 MCP Tools = Defined but called in-process (no HTTP)
+  ⚙️  All agents run in same pod (monolithic)
+  
+📊 Deployment: Single pod on AKS, namespace: multiagent-kubecon-simple
 ```
 
-### **Coming Soon: Microservices Architecture** (Phase 2 🚧)
+### **Phase 2: Microservices Architecture** (✅ DEPLOYED!)
 
 ```
+┌───────────────────────────────────────────────────────────────────────┐
+│                        EXTERNAL WORLD                                 │
+│  • Web Browser Users  • Other A2A Agents  • API Clients              │
+└───────────────────────┬───────────────────────────────────────────────┘
+                        │
+                        │ (1) 📡 A2A PROTOCOL
+                        │     - Agent Discovery (GET /a2a/)
+                        │     - Task Delegation (POST /a2a/tasks/send)
+                        │     - REST API (POST /api/chat/message)
+                        ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   Coordinator Service (Pod 1)                    │
-│  • Travel Manager Agent                                         │
-│  • MCP Client (calls other agents)                             │
-│  • A2A Discovery                                                │
-└────────┬────────────────────────────────────────────────────────┘
-         │
-         ├──── A2A Discovery ────┬──── MCP Calls ────┐
-         ▼                       ▼                    ▼
-┌──────────────────┐   ┌──────────────────┐  ┌──────────────────┐
-│ Currency Service │   │ Activity Service │  │ Future Agents    │
-│     (Pod 2)      │   │     (Pod 3)      │  │   (Pod N)        │
-├──────────────────┤   ├──────────────────┤  ├──────────────────┤
-│ • A2A Endpoint   │   │ • A2A Endpoint   │  │ • HR Agent       │
-│ • MCP Server     │   │ • MCP Server     │  │ • Flight Agent   │
-│ • 2 Tools        │   │ • 3 Tools        │  │ • Hotel Agent    │
-└──────────────────┘   └──────────────────┘  └──────────────────┘
+│               COORDINATOR SERVICE (Pod 1) 🎯                    │
+│              LoadBalancer: http://172.169.51.14                 │
+├─────────────────────────────────────────────────────────────────┤
+│  📡 A2A SERVER (Port 8000)                                      │
+│     • Agent Card Discovery                                      │
+│     • Task Reception & Delegation                               │
+│                                                                 │
+│  🌐 WEB UI (Port 8000)                                          │
+│     • Chat Interface                                            │
+│     • REST API Endpoints                                        │
+│                                                                 │
+│  🤖 TRAVEL MANAGER AGENT (Semantic Kernel)                      │
+│     • Analyzes Requests                                         │
+│     • Determines Required Tools                                 │
+│     • Aggregates Results                                        │
+│                                                                 │
+│  🔌 MCP CLIENT                                                  │
+│     • Connects to internal agents via HTTP                      │
+│     • Sends JSON-RPC 2.0 tool calls                            │
+└───────────┬──────────────────────────┬──────────────────────────┘
+            │                          │
+            │ (2) 🔧 MCP PROTOCOL      │ (3) 🔧 MCP PROTOCOL
+            │     over HTTP            │     over HTTP
+            │     POST /mcp/v1         │     POST /mcp/v1
+            │     JSON-RPC 2.0         │     JSON-RPC 2.0
+            ▼                          ▼
+┌───────────────────────┐  ┌───────────────────────┐  ┌────────────────┐
+│ 💰 CURRENCY AGENT     │  │ 🎨 ACTIVITY AGENT     │  │ 🔮 FUTURE      │
+│     (Pod 2)           │  │     (Pod 3)           │  │    AGENTS      │
+│ Port: 8001 (ClusterIP)│  │ Port: 8002 (ClusterIP)│  │    (Pod N)     │
+├───────────────────────┤  ├───────────────────────┤  ├────────────────┤
+│ 🔧 MCP SERVER         │  │ 🔧 MCP SERVER         │  │ • HR Agent     │
+│                       │  │                       │  │ • Flight Agent │
+│ Tools:                │  │ Tools:                │  │ • Hotel Agent  │
+│  • get_exchange_rate  │  │  • plan_activities    │  │                │
+│  • convert_amount     │  │  • suggest_restaurants│  │                │
+│                       │  │  • suggest_attractions│  │                │
+│                       │  │                       │  │                │
+│ 🌐 Frankfurter API    │  │ 💡 AI-powered planning│  │                │
+└───────────────────────┘  └───────────────────────┘  └────────────────┘
+      Internal Only             Internal Only            Coming Soon
+   http://currency-agent:8001  http://activity-agent:8002
+
+─────────────────────────────────────────────────────────────────────────
+📊 Deployment Details:
+  • AKS Cluster: aks-qfapkj24vye7a (rg-kubecon-micro)
+  • Namespace: multiagent-microservices
+  • Container Registry: acrmaqfapkj24vye7.azurecr.io
+  • Azure OpenAI: oai-qfapkj24vye7a (gpt-4o-mini)
+  
+🔑 Protocol Distinction:
+  📡 A2A = External communication (Internet → Coordinator)
+  🔧 MCP = Internal communication (Coordinator → Agents)
+  
+📖 Detailed Flow Diagrams: See PROTOCOL_FLOWS.md
 ```
 
 ---
@@ -710,28 +762,31 @@ See `docs/PHASE1_TEST_RESULTS.md` for detailed results.
 
 ---
 
-## 📊 Branches
+## 📊 Branches & Deployments
 
-| Branch | Status | Description |
-|--------|--------|-------------|
-| `main` | ✅ Deployed | Stable monolithic app on AKS |
-| `microservices` | 🚧 Development | MCP-enabled, preparing for microservices split |
+| Branch | Status | Description | External IP |
+|--------|--------|-------------|-------------|
+| `main` | ✅ Deployed | Stable monolithic app on AKS (Phase 1) | http://172.168.108.4 |
+| `microservices` | ✅ Deployed | MCP-enabled microservices on AKS (Phase 2) | http://172.169.51.14 |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] **Phase 1**: MCP Integration (Complete ✅)
+- [x] **Phase 1**: Monolithic with MCP Integration (✅ Deployed at 172.168.108.4)
   - [x] Add MCP SDK
   - [x] Create MCP servers for agents
   - [x] Define 5 MCP tools
   - [x] Testing and documentation
+  - [x] Deploy to AKS with azd
 
-- [ ] **Phase 2**: Microservices Architecture (In Progress 🚧)
-  - [ ] Split into separate services
-  - [ ] Independent Dockerfiles
-  - [ ] Kubernetes multi-service deployment
-  - [ ] Service discovery via K8s DNS
+- [x] **Phase 2**: Microservices Architecture (✅ Deployed at 172.169.51.14)
+  - [x] Split into separate services (coordinator, currency-agent, activity-agent)
+  - [x] Independent Dockerfiles for each service
+  - [x] Kubernetes multi-service deployment
+  - [x] Service discovery via K8s DNS
+  - [x] MCP communication over HTTP
+  - [x] Azure OpenAI integration with gpt-4o-mini
 
 - [ ] **Phase 3**: Add New Agents (Planned 📅)
   - [ ] HR Agent (human resources)

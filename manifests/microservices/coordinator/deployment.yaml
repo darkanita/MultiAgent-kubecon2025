@@ -28,6 +28,11 @@ spec:
             configMapKeyRef:
               name: app-config
               key: AZURE_OPENAI_ENDPOINT
+        - name: AZURE_OPENAI_DEPLOYMENT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: AZURE_OPENAI_DEPLOYMENT_NAME
         - name: AZURE_OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
