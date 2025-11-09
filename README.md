@@ -101,7 +101,7 @@ A cloud-native multi-agent application combining Semantic Kernel AI agents with 
 │  │  │  │                                                           │ │    │ │
 │  │  │  │  ┌────────────────────────────────────────────────────┐  │ │    │ │
 │  │  │  │  │  Service: multiagent-service (LoadBalancer)        │  │ │    │ │
-│  │  │  │  │  External IP: 172.168.108.4                        │  │ │    │ │
+│  │  │  │  │  External IP: <YOUR-PUBLIC-IP>                     │  │ │    │ │
 │  │  │  │  │  Port: 80 → 8000                                   │  │ │    │ │
 │  │  │  │  └────────────────────────────────────────────────────┘  │ │    │ │
 │  │  │  │                                                           │ │    │ │
@@ -155,7 +155,7 @@ A cloud-native multi-agent application combining Semantic Kernel AI agents with 
                                       │
                           ┌───────────────────────┐
                           │   Internet Users      │
-                          │   http://172.168.108.4│
+                          │   http://<YOUR-IP>    │
                           └───────────────────────┘
 ```
 
@@ -171,7 +171,7 @@ A cloud-native multi-agent application combining Semantic Kernel AI agents with 
      ▼
 ┌────────────────────┐
 │  LoadBalancer      │
-│  172.168.168.4:80 │
+│  <YOUR-IP>:80      │
 └────┬───────────────┘
      │
      │ Forward to Pod

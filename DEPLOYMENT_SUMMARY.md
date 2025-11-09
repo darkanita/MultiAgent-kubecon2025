@@ -2,7 +2,7 @@
 
 ## ✅ Successfully Deployed!
 
-**Application URL**: http://172.168.108.4  
+**Application URL**: http://<YOUR-PUBLIC-IP>  
 **Environment**: `kubecon-agent`  
 **Resource Group**: `rg-kubeconagent`  
 **Deployment Date**: November 2, 2025
@@ -17,19 +17,19 @@
   - Node Count: 1
   - Network Plugin: kubenet
   
-- ✅ **Azure Container Registry**: `acrmakubeconagent5h4hjd6w.azurecr.io`
+- ✅ **Azure Container Registry**: `<YOUR-ACR>.azurecr.io`
   - SKU: Basic
   - Admin User Enabled: Yes
   
-- ✅ **Azure OpenAI**: `oai-5h4hjd6wjnu74`
+- ✅ **Azure OpenAI**: `<YOUR-OPENAI-RESOURCE>`
   - Model: gpt-4o-mini
   - API Version: 2024-08-01-preview
-  - Endpoint: https://oai-5h4hjd6wjnu74.openai.azure.com/
+  - Endpoint: https://<YOUR-OPENAI-RESOURCE>.openai.azure.com/
   
-- ✅ **Cosmos DB**: `cosmos-5h4hjd6wjnu74`
+- ✅ **Cosmos DB**: `<YOUR-COSMOS-DB>`
   - Tier: Serverless
   - API: SQL
-  - Endpoint: https://cosmos-5h4hjd6wjnu74.documents.azure.com:443/
+  - Endpoint: https://<YOUR-COSMOS-DB>.documents.azure.com:443/
   
 - ✅ **Virtual Network**: `vnet-5h4hjd6wjnu74`
   - Address Space: 10.0.0.0/16
@@ -96,19 +96,19 @@ MultiAgent-kubecon2025/
 ### Access Application
 ```bash
 # Open in browser
-http://172.168.108.4
+http://<YOUR-PUBLIC-IP>
 
 # Health check
-curl http://172.168.168.4/health
+curl http://<YOUR-PUBLIC-IP>/health
 
 # Agent Card (A2A)
-curl http://172.168.108.4/a2a/
+curl http://<YOUR-PUBLIC-IP>/a2a/
 ```
 
 ### Kubernetes Operations
 ```bash
 # Get AKS credentials
-az aks get-credentials --resource-group rg-kubeconagent --name aks-5h4hjd6wjnu74
+az aks get-credentials --resource-group rg-kubeconagent --name <YOUR-AKS-CLUSTER>
 
 # View pods
 kubectl get pods -n multiagent-kubecon-simple
@@ -140,8 +140,8 @@ kubectl rollout status deployment multiagent-app -n multiagent-kubecon-simple
 ## 🔧 Configuration
 
 ### Environment Variables (ConfigMap)
-- `AZURE_OPENAI_ENDPOINT`: https://oai-5h4hjd6wjnu74.openai.azure.com/
-- `AZURE_COSMOS_ENDPOINT`: https://cosmos-5h4hjd6wjnu74.documents.azure.com:443/
+- `AZURE_OPENAI_ENDPOINT`: https://<YOUR-OPENAI-RESOURCE>.openai.azure.com/
+- `AZURE_COSMOS_ENDPOINT`: https://<YOUR-COSMOS-DB>.documents.azure.com:443/
 
 ### Secrets (Kubernetes Secret)
 - `AZURE_OPENAI_API_KEY`: (stored securely in `openai-secret`)
@@ -157,21 +157,21 @@ kubectl rollout status deployment multiagent-app -n multiagent-kubecon-simple
 
 ### Test Currency Exchange Agent
 ```bash
-curl -X POST http://172.168.108.4/api/chat/message \
+curl -X POST http://<YOUR-PUBLIC-IP>/api/chat/message \
   -H "Content-Type: application/json" \
   -d '{"message": "What is the USD to EUR exchange rate?"}'
 ```
 
 ### Test Trip Planning Agent
 ```bash
-curl -X POST http://172.168.108.4/api/chat/message \
+curl -X POST http://<YOUR-PUBLIC-IP>/api/chat/message \
   -H "Content-Type: application/json" \
   -d '{"message": "Plan a 3-day trip to Tokyo with a $500 budget"}'
 ```
 
 ### Test Multi-Agent Delegation
 ```bash
-curl -X POST http://172.168.108.4/api/chat/message \
+curl -X POST http://<YOUR-PUBLIC-IP>/api/chat/message \
   -H "Content-Type: application/json" \
   -d '{"message": "I have 500 USD budget for Seoul - convert to KRW and suggest activities"}'
 ```
@@ -214,7 +214,7 @@ curl -X POST http://172.168.108.4/api/chat/message \
 
 ✅ Complete infrastructure deployed via AZD  
 ✅ Application running in AKS with LoadBalancer  
-✅ Web interface accessible at http://172.168.108.4  
+✅ Web interface accessible at http://<YOUR-PUBLIC-IP>  
 ✅ Semantic Kernel agents responding to queries  
 ✅ Currency exchange working (Frankfurter API)  
 ✅ Trip planning working (Activity suggestions)  
