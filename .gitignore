@@ -121,6 +121,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
 .venv
 env/
 venv/
@@ -249,3 +250,55 @@ node_modules/
 
 # TernJS port file
 .tern-port
+
+# ======================================
+# PROJECT SPECIFIC - SENSITIVE DATA
+# ======================================
+
+# Configuration with real values
+config.yaml
+config.local.yaml
+azure.local.yaml
+
+# Deployment files with real IPs/endpoints
+*-deployment-backup.yaml
+coordinator-patch.yaml
+fixed-agent-executor-configmap.yaml
+
+# Test files with real public IPs
+test_public_ip.sh
+test_public_ip_with_logs.py
+test_a2a_working.py
+test_system_complete.py
+
+# Validation and demo files with real endpoints
+validate_protocols.py
+demo_a2a_mcp_flow.py
+verify_demo.sh
+
+# Documentation with real IPs (generate from templates)
+SYSTEM_STATUS_REPORT.md
+DEMO_QUICK_REFERENCE.md
+LOG_IDENTIFICATION_GUIDE.md
+A2A_FIX_SUMMARY.md
+PROTOCOL_VALIDATION_REPORT.md
+SECURITY_CLEANUP_CHECKLIST.md
+
+# Test results with real data
+system_test_results.json
+validation_results.json
+
+# Kubernetes manifests with real values (use templates)
+manifests/deployment.yaml
+manifests/microservices/*/deployment.yaml
+
+# Monitoring scripts with real endpoints
+monitor-pods.py
+monitor-pods.sh
+watch-protocols.sh
+view_mcp_logs.sh
+
+# Backup and temporary files
+*.backup
+*.tmp
+*.bak

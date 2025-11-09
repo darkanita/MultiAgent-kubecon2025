@@ -14,6 +14,34 @@
 ![MCP](https://img.shields.io/badge/MCP-1.0-green)
 ![A2A](https://img.shields.io/badge/A2A-0.2.9-orange)
 
+---
+
+## ⚠️ Important: Configuration Required
+
+**This repository does not contain sensitive Azure credentials or public IPs.**
+
+Before deploying, you must configure your own Azure resources:
+
+1. **Quick Setup** (recommended):
+   ```bash
+   python setup_project.py
+   ```
+
+2. **Manual Setup**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Azure values
+   ```
+
+Required Azure resources:
+- Azure Kubernetes Service (AKS) cluster
+- Azure OpenAI service
+- Azure Container Registry (ACR)
+
+See [Configuration Guide](#-configuration) below for details.
+
+---
+
 ## 📖 About
 
 A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel with **dual protocol support**:
@@ -154,6 +182,26 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
 └───────────────────────┘  └───────────────────────┘  └────────────────┘
       Internal Only             Internal Only            Coming Soon
    http://currency-agent:8001  http://activity-agent:8002
+
+─────────────────────────────────────────────────────────────────────────
+⚠️  **IMPORTANT NOTE - Current Implementation Status:**
+  
+  📊 **What's Working:**
+  • ✅ Microservices deployed on separate pods
+  • ✅ A2A Protocol active for external communication
+  • ✅ MCP Servers running (currency-agent:8001, activity-agent:8002)
+  • ✅ Web UI and REST API functional
+  
+  🚧 **What's NOT Working (In Progress):**
+  • ❌ Coordinator uses in-process Semantic Kernel calls
+  • ❌ MCP HTTP protocol not active between coordinator and agents
+  • ❌ No JSON-RPC 2.0 communication over HTTP
+  
+  📝 **Current Architecture:**
+  Coordinator → Semantic Kernel (in-process) → Tools
+  
+  🎯 **Target Architecture:**
+  Coordinator → MCP Client (HTTP) → MCP Servers (currency/activity)
 
 ─────────────────────────────────────────────────────────────────────────
 📊 Deployment Details:
@@ -540,7 +588,61 @@ MultiAgent-kubecon2025/
 
 ---
 
-## 🚀 Quick Start
+## � Configuration
+
+### Option 1: Interactive Setup (Recommended)
+
+Run the interactive setup script that will guide you through configuration:
+
+```bash
+python setup_project.py
+```
+
+This will:
+- Prompt for your Azure resource information
+- Create a `.env` file with your configuration
+- Validate your inputs
+- Show next steps for deployment
+
+### Option 2: Manual Configuration
+
+1. Copy the environment template:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your Azure values:
+   ```bash
+   # Required values
+   PUBLIC_IP=<your-aks-loadbalancer-ip>
+   AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
+   AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
+   ACR_NAME=<your-acr-name>
+   ```
+
+3. Never commit `.env` to version control (already in `.gitignore`)
+
+### Required Azure Resources
+
+| Resource | Purpose | Configuration |
+|----------|---------|---------------|
+| **Azure Kubernetes Service (AKS)** | Host multi-agent system | Public LoadBalancer IP required |
+| **Azure OpenAI** | LLM for agents | gpt-4o-mini deployment |
+| **Azure Container Registry (ACR)** | Store Docker images | Integrated with AKS |
+| **Managed Identity** | Authentication | Assigned to AKS nodes |
+
+### Security Best Practices
+
+- ✅ `.env` files are git-ignored
+- ✅ Use managed identities (not service principals)
+- ✅ Store secrets in Azure Key Vault (production)
+- ✅ Enable RBAC on AKS cluster
+- ❌ Never commit IPs, endpoints, or credentials
+- ❌ Don't use default credentials
+
+---
+
+## �🚀 Quick Start
 
 ### Prerequisites
 - Python 3.10+
@@ -688,13 +790,14 @@ See `docs/PHASE1_TEST_RESULTS.md` for detailed results.
   - [x] Testing and documentation
   - [x] Deploy to AKS with azd
 
-- [x] **Phase 2**: Microservices Architecture (✅ Deployed at 172.169.51.14)
+- [x] **Phase 2**: Microservices Architecture (⚠️  PARTIALLY DEPLOYED at 172.169.51.14)
   - [x] Split into separate services (coordinator, currency-agent, activity-agent)
   - [x] Independent Dockerfiles for each service
   - [x] Kubernetes multi-service deployment
   - [x] Service discovery via K8s DNS
-  - [x] MCP communication over HTTP
+  - [ ] MCP communication over HTTP ⚠️  **NOT ACTIVE** (using in-process Semantic Kernel)
   - [x] Azure OpenAI integration with gpt-4o-mini
+  - [ ] **TODO**: Implement HTTP MCP client in coordinator to call MCP servers
 
 - [ ] **Phase 3**: Add New Agents (Planned 📅)
   - [ ] HR Agent (human resources)
