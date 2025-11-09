@@ -15,7 +15,7 @@ This document shows the **visual flow** of how **A2A** and **MCP** protocols wor
 │                         USER INTERACTION                                │
 └─────────────────────────────────────────────────────────────────────────┘
 
-User opens browser → http://172.169.51.14
+User opens browser → http://<YOUR-PUBLIC-IP>
 User types: "Convert 100 USD to EUR and plan activities in Paris"
 User clicks Send
 
@@ -163,7 +163,7 @@ kubectl logs -n multiagent-microservices deployment/activity-agent -f
 
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      COORDINATOR POD (8000)                             │
-│                      http://172.169.51.14/a2a/                          │
+│                      http://<YOUR-PUBLIC-IP>/a2a/                          │
 │                                                                         │
 │  📡 A2A SERVER                                                          │
 │                                                                         │
@@ -311,7 +311,7 @@ kubectl logs -n multiagent-microservices deployment/coordinator -f | grep -E "\[
 | **When Used** | Other agents discover your service | Your coordinator needs specific tools |
 | **Example Request** | "Discover available agents" | "Call convert_amount tool" |
 | **Network** | External (LoadBalancer, public IP) | Internal (ClusterIP, K8s DNS) |
-| **Visibility** | Internet-facing (http://172.169.51.14/a2a/) | Private cluster (http://currency-agent:8001) |
+| **Visibility** | Internet-facing (http://<YOUR-PUBLIC-IP>/a2a/) | Private cluster (http://currency-agent:8001) |
 | **Authentication** | Could use API keys, OAuth (not implemented) | No auth needed (internal network) |
 | **Use Case** | Multi-platform agent collaboration | Microservices tool orchestration |
 
@@ -323,10 +323,10 @@ kubectl logs -n multiagent-microservices deployment/coordinator -f | grep -E "\[
 
 ```bash
 # Open browser
-open http://172.169.51.14
+open http://<YOUR-PUBLIC-IP>
 
 # Or use curl
-curl -X POST http://172.169.51.14/api/chat/message \
+curl -X POST http://<YOUR-PUBLIC-IP>/api/chat/message \
   -H "Content-Type: application/json" \
   -d '{
     "message": "Convert 100 USD to EUR and suggest Paris activities",
@@ -343,12 +343,12 @@ kubectl logs -n multiagent-microservices deployment/activity-agent -f
 
 ```bash
 # Get Agent Card (A2A discovery)
-curl http://172.169.51.14/a2a/ | jq
+curl http://<YOUR-PUBLIC-IP>/a2a/ | jq
 
 # Expected response: Agent Card JSON with skills
 
 # Send A2A task
-curl -X POST http://172.169.51.14/a2a/tasks/send \
+curl -X POST http://<YOUR-PUBLIC-IP>/a2a/tasks/send \
   -H "Content-Type: application/json" \
   -d '{
     "task": {

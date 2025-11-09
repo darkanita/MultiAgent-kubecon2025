@@ -40,6 +40,8 @@ class A2AServer:
         )
         
         logger.info(f"📡 [A2A] Server configured for {self.host}:{self.port}")
+        logger.info(f"📡 [A2A] Agent Card will be available at /.well-known/agent-card.json")
+        logger.info(f"📡 [A2A] JSON-RPC endpoint will be available at / (POST)")
     
     def _get_agent_card(self) -> AgentCard:
         """Returns the Agent Card for the Semantic Kernel Travel Agent."""

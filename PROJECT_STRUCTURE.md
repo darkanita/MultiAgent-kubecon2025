@@ -162,7 +162,7 @@ MultiAgent-kubecon2025/
 ### Phase 1 (main branch)
 - **Branch**: `main`
 - **Namespace**: `multiagent-kubecon-simple`
-- **External IP**: http://172.168.108.4
+- **External IP**: http://<YOUR-PHASE1-PUBLIC-IP>
 - **Architecture**: Monolithic (single pod)
 - **Resource Group**: `rg-kubeconagent`
 - **Status**: ✅ Deployed and working
@@ -170,7 +170,7 @@ MultiAgent-kubecon2025/
 ### Phase 2 (microservices branch)
 - **Branch**: `microservices`
 - **Namespace**: `multiagent-microservices`
-- **External IP**: http://172.169.51.14
+- **External IP**: http://<YOUR-PUBLIC-IP>
 - **Architecture**: 3 microservices
   - Coordinator (Port 8000, LoadBalancer)
   - Currency Agent (Port 8001, ClusterIP)

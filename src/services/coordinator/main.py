@@ -127,11 +127,17 @@ async def health_check():
     }
 
 
-@app.get("/agent-card")
+@app.get("/a2a/agent-card")
 async def get_agent_card():
-    """Expose the A2A Agent Card for discovery"""
+    """Expose the A2A Agent Card for discovery (convenience endpoint)
+    
+    This provides a simpler URL for agent card discovery.
+    The standard A2A endpoint is at /a2a/.well-known/agent-card.json
+    """
     if a2a_server:
-        return a2a_server._get_agent_card()
+        # Return the agent card as a dict for JSON serialization
+        card = a2a_server._get_agent_card()
+        return card.model_dump() if hasattr(card, 'model_dump') else card.dict()
     return {"error": "A2A server not initialized"}
 
 

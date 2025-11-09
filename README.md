@@ -49,14 +49,14 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
 - **MCP Protocol** (Model Context Protocol) for tool execution
 
 **Two deployment options available**:
-- **Phase 1**: Monolithic application (main branch) - ✅ Deployed at http://172.168.108.4
-- **Phase 2**: Microservices architecture (microservices branch) - ✅ Deployed at http://172.169.51.14
+- **Phase 1**: Monolithic application (main branch) - ✅ Deployed at http://<YOUR-PHASE1-PUBLIC-IP>
+- **Phase 2**: Microservices architecture (microservices branch) - ✅ Deployed at http://<YOUR-PUBLIC-IP>
 
 ---
 
 ## 🏗️ Architecture Overview
 
-### **Phase 1: Monolithic + MCP Integration** (✅ Deployed at 172.168.108.4)
+### **Phase 1: Monolithic + MCP Integration** (✅ Deployed at <YOUR-PHASE1-PUBLIC-IP>)
 
 ```
 ┌───────────────────────────────────────────────────────────────────────┐
@@ -71,7 +71,7 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │              FastAPI Application (Single Pod)                    │
-│              LoadBalancer: http://172.168.108.4                  │
+│              LoadBalancer: http://<YOUR-PHASE1-PUBLIC-IP>                  │
 ├─────────────────────────────────────────────────────────────────┤
 │  📡 A2A SERVER (Port 8000)                                      │
 │     • GET /a2a/ - Agent Card discovery                          │
@@ -141,7 +141,7 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
                         ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │               COORDINATOR SERVICE (Pod 1) 🎯                    │
-│              LoadBalancer: http://172.169.51.14                 │
+│              LoadBalancer: http://<YOUR-PUBLIC-IP>                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  📡 A2A SERVER (Port 8000)                                      │
 │     • Agent Card Discovery                                      │
@@ -207,8 +207,8 @@ A cloud-native multi-agent travel assistant combining Microsoft Semantic Kernel 
 📊 Deployment Details:
   • AKS Cluster: aks-qfapkj24vye7a (rg-kubecon-micro)
   • Namespace: multiagent-microservices
-  • Container Registry: acrmaqfapkj24vye7.azurecr.io
-  • Azure OpenAI: oai-qfapkj24vye7a (gpt-4o-mini)
+  • Container Registry: <YOUR-ACR>.azurecr.io
+  • Azure OpenAI: <YOUR-OPENAI-RESOURCE> (gpt-4o-mini)
   
 🔑 Protocol Distinction:
   📡 A2A = External communication (Internet → Coordinator)
@@ -776,21 +776,21 @@ See `docs/PHASE1_TEST_RESULTS.md` for detailed results.
 
 | Branch | Status | Description | External IP |
 |--------|--------|-------------|-------------|
-| `main` | ✅ Deployed | Stable monolithic app on AKS (Phase 1) | http://172.168.108.4 |
-| `microservices` | ✅ Deployed | MCP-enabled microservices on AKS (Phase 2) | http://172.169.51.14 |
+| `main` | ✅ Deployed | Stable monolithic app on AKS (Phase 1) | http://<YOUR-PHASE1-PUBLIC-IP> |
+| `microservices` | ✅ Deployed | MCP-enabled microservices on AKS (Phase 2) | http://<YOUR-PUBLIC-IP> |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [x] **Phase 1**: Monolithic with MCP Integration (✅ Deployed at 172.168.108.4)
+- [x] **Phase 1**: Monolithic with MCP Integration (✅ Deployed at <YOUR-PHASE1-PUBLIC-IP>)
   - [x] Add MCP SDK
   - [x] Create MCP servers for agents
   - [x] Define 5 MCP tools
   - [x] Testing and documentation
   - [x] Deploy to AKS with azd
 
-- [x] **Phase 2**: Microservices Architecture (⚠️  PARTIALLY DEPLOYED at 172.169.51.14)
+- [x] **Phase 2**: Microservices Architecture (⚠️  PARTIALLY DEPLOYED at <YOUR-PUBLIC-IP>)
   - [x] Split into separate services (coordinator, currency-agent, activity-agent)
   - [x] Independent Dockerfiles for each service
   - [x] Kubernetes multi-service deployment
